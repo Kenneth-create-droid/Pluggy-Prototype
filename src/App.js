@@ -1,4 +1,6 @@
 import Profile from "./Profile";
+import profilepic from "./Images/profilepic.png"; // <-- import the local image
+
 
 function App() {
   return (
@@ -12,8 +14,12 @@ function App() {
         <p>Your social adventure starts here.</p>
         <button>Get Started</button>
 
-        {/* Render the Profile component here */}
-        <Profile />
+        {/* Single editable Profile */}
+        <Profile 
+          name="Kenneth Nnah"
+          bio="Software Engineering Student | Pluggy Creator 🚀"
+          imgUrl={profilepic}
+        />
       </main>
 
       <footer>
