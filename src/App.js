@@ -1,5 +1,3 @@
-import logo from './logo.svg';
-import './App.css';
 import Profile from "./Profile";
 
 function App() {
@@ -9,10 +7,13 @@ function App() {
          <h1>Pluggy</h1>
       </header>
      
-     <main>
+      <main>
         <h2>Welcome to Pluggy 🎉</h2>
         <p>Your social adventure starts here.</p>
         <button>Get Started</button>
+
+        {/* Render the Profile component here */}
+        <Profile />
       </main>
 
       <footer>
