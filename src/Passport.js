@@ -1,27 +1,56 @@
-import React, { useState } from "react";
+// src/Passport.js
+import React, { useState, useMemo } from "react";
 
 function Passport({ name: initialName, bio: initialBio, imgUrl }) {
   const [name, setName] = useState(initialName);
   const [bio, setBio] = useState(initialBio);
   const [isEditing, setIsEditing] = useState(false);
-  const [myPlug, setMyPlug] = useState(85); // Example MyPlug
-  const [totalConnections, setTotalConnections] = useState(7); // Example in-person connections
-  const [status, setStatus] = useState("Feeling social! 🌟"); // Optional status
+  const [myPlug] = useState(85);
+  const [totalConnections] = useState(7);
+  const [status, setStatus] = useState("Feeling social! 🌟");
 
-  // DOB state
   const [dobDay, setDobDay] = useState("1");
   const [dobMonth, setDobMonth] = useState("January");
   const [dobYear, setDobYear] = useState("2000");
 
-  // Badge examples
-  const badges = ["🎮", "💻", "🚀", "🎵"]; // Gamer, Tech, Creator, Music
+  const [address, setAddress] = useState("");
+  const [suggestions, setSuggestions] = useState([]); // 🆕 suggestions list
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const years = Array.from({ length: 100 }, (_, i) => 2025 - i);
+  const badges = ["🎮", "💻", "🚀", "🎵"];
+
+  const months = useMemo(
+    () => [
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
+    ],
+    []
+  );
+  const days = useMemo(() => Array.from({ length: 31 }, (_, i) => i + 1), []);
+  const years = useMemo(() => Array.from({ length: 100 }, (_, i) => 2025 - i), []);
+
+  /** Fetch suggestions from Nominatim */
+  const fetchSuggestions = async (query) => {
+    if (!query) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`
+      );
+      const data = await response.json();
+      setSuggestions(data.slice(0, 5)); // top 5 results
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error("Error fetching address suggestions:", error);
+    }
+  };
+
+  const handleSelectSuggestion = (suggestion) => {
+    setAddress(suggestion.display_name);
+    setShowSuggestions(false);
+  };
 
   return (
     <div style={{
@@ -40,22 +69,25 @@ function Passport({ name: initialName, bio: initialBio, imgUrl }) {
         style={{ borderRadius: "50%", width: "120px", height: "120px", objectFit: "cover", marginBottom: "15px" }}
       />
 
-      {/* Editable info */}
+      {/* Editable Info */}
       {isEditing ? (
         <div>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
+            placeholder="Enter name"
             style={{ display: "block", margin: "10px auto", width: "80%", padding: "5px" }}
           />
           <input
             value={bio}
             onChange={(e) => setBio(e.target.value)}
+            placeholder="Enter bio"
             style={{ display: "block", margin: "10px auto", width: "80%", padding: "5px" }}
           />
           <input
             value={status}
             onChange={(e) => setStatus(e.target.value)}
+            placeholder="Enter status"
             style={{ display: "block", margin: "10px auto", width: "80%", padding: "5px" }}
           />
 
@@ -73,6 +105,45 @@ function Passport({ name: initialName, bio: initialBio, imgUrl }) {
             </select>
           </div>
 
+          {/* Address Input with Free Autocomplete */}
+          <div style={{ position: "relative" }}>
+            <input
+              value={address}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                fetchSuggestions(e.target.value);
+              }}
+              placeholder="Enter address"
+              style={{ display: "block", margin: "10px auto", width: "80%", padding: "5px" }}
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <ul style={{
+                position: "absolute",
+                left: "10%",
+                width: "80%",
+                background: "white",
+                border: "1px solid #ccc",
+                borderRadius: "5px",
+                maxHeight: "150px",
+                overflowY: "auto",
+                zIndex: 1000,
+                listStyle: "none",
+                margin: 0,
+                padding: 0
+              }}>
+                {suggestions.map((s, i) => (
+                  <li
+                    key={i}
+                    onClick={() => handleSelectSuggestion(s)}
+                    style={{ padding: "8px", cursor: "pointer" }}
+                  >
+                    {s.display_name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
           <button
             onClick={() => setIsEditing(false)}
             style={{ padding: "5px 10px", marginTop: "10px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
@@ -86,6 +157,7 @@ function Passport({ name: initialName, bio: initialBio, imgUrl }) {
           <p>{bio}</p>
           <p>Status: {status}</p>
           <p><strong>Date of Birth:</strong> {dobDay} {dobMonth}, {dobYear}</p>
+          <p><strong>Address:</strong> {address || "Not provided"}</p>
 
           {/* Badges */}
           <div style={{ marginTop: "10px" }}>
